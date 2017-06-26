@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group = 'com.github.CrazyOrr.rxbus'
+group = 'com.github.CrazyOrr'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
