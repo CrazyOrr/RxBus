@@ -36,12 +36,12 @@ allprojects {
 
 Add dependency to your gradle file:
 ```groovy
-compile 'com.github.CrazyOrr.rxbus:rxbus:master-SNAPSHOT'
+compile 'com.github.CrazyOrr:rxbus:master-SNAPSHOT'
 ```
 
 **TIP:** Maybe you also use the [JakeWharton/timber](https://github.com/JakeWharton/timber) to log your message, you may need to exclude the timber (from version 1.0.4, timber dependency update from [AndroidKnife/Utils/timber](https://github.com/AndroidKnife/Utils/tree/master/timber) to JakeWharton):
-``` groovy
-compile ('com.github.CrazyOrr.rxbus:rxbus:master-SNAPSHOT') {
+```groovy
+compile ('com.github.CrazyOrr:rxbus:master-SNAPSHOT') {
     exclude group: 'com.jakewharton.timber', module: 'timber'
 }
 ```
@@ -50,11 +50,11 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 **STEP 3**
 
 Just use the provided(Any Thread Enforce):
-``` java
+```java
 com.hwangjr.rxbus.RxBus
 ```
 Or make RxBus instance is a better choice:
-``` java
+```java
 public static final class RxBus {
     private static Bus sBus;
     
@@ -68,7 +68,7 @@ public static final class RxBus {
 ```
 
 Add the code where you want to produce/subscribe events, and register and unregister the class.
-``` java
+```java
 public class MainActivity extends AppCompatActivity {
     ...
     
