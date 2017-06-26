@@ -1,10 +1,13 @@
 package com.hwangjr.rxbus;
 
+import android.content.Context;
+
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.hwangjr.rxbus.entity.DeadEvent;
 import com.hwangjr.rxbus.entity.EventType;
 import com.hwangjr.rxbus.entity.ProducerEvent;
+import com.hwangjr.rxbus.entity.StickyEvent;
 import com.hwangjr.rxbus.entity.SubscriberEvent;
 import com.hwangjr.rxbus.finder.Finder;
 import com.hwangjr.rxbus.thread.ThreadEnforcer;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -104,6 +108,16 @@ public class Bus {
 
     private final ConcurrentMap<Class<?>, Set<Class<?>>> flattenHierarchyCache =
             new ConcurrentHashMap<>();
+
+    /**
+     * All registered objects, mapped by context's string.
+     */
+    private final ConcurrentMap<String, Set<Object>> contextStrToRegistersSet = new ConcurrentHashMap<>();
+
+    /**
+     * All sticky events.
+     */
+    private final ConcurrentLinkedQueue<StickyEvent> stickyEvents = new ConcurrentLinkedQueue<>();
 
     /**
      * Creates a new Bus named "default" that enforces actions on the main thread.
@@ -226,7 +240,46 @@ public class Bus {
                     }
                 }
             }
+
+            Set<SubscriberEvent> subscriberEvents = entry.getValue();
+            for (SubscriberEvent subscriberEvent : subscriberEvents) {
+                int count = stickyEvents.size();
+                for (int i = 0; i < count; i++) {
+                    StickyEvent stickyEvent = stickyEvents.poll();
+                    Object event = stickyEvent.getEvent();
+                    Set<Class<?>> dispatchClasses = flattenHierarchy(event.getClass());
+                    for (Class<?> clazz : dispatchClasses) {
+                        if (type.equals(new EventType(stickyEvent.getTag(), clazz))) {
+                            dispatch(event, subscriberEvent);
+                            int stickCount = stickyEvent.getStickCount();
+                            stickyEvent.setStickCount(--stickCount);
+                            if (stickCount > 0) {
+                                stickyEvents.offer(stickyEvent);
+                            }
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    /**
+     * Register with context
+     *
+     * @param object  object whose subscriber methods should be registered.
+     * @param context context associated with the object
+     */
+    public void registerByContext(Object object, Context context) {
+        register(object);
+        String contextStr = context.toString();
+        Set<Object> registers = contextStrToRegistersSet.get(contextStr);
+        if (registers == null) {
+            //concurrent put if absent
+            Set<Object> registersCreation = new CopyOnWriteArraySet<>();
+            contextStrToRegistersSet.putIfAbsent(contextStr, registersCreation);
+            registers = registersCreation;
+        }
+        registers.add(object);
     }
 
     private void dispatchProducerResult(final SubscriberEvent subscriberEvent, ProducerEvent producer) {
@@ -330,6 +383,17 @@ public class Bus {
         }
     }
 
+    public void unregisterByContext(Context context) {
+        String contextStr = context.toString();
+        Set<Object> registers = contextStrToRegistersSet.get(contextStr);
+        if (registers != null) {
+            for (Object object : registers) {
+                unregister(object);
+            }
+        }
+        contextStrToRegistersSet.remove(contextStr);
+    }
+
     /**
      * Posts an event to all registered subscribers.  This method will return successfully after the event has been posted to
      * all subscribers, and regardless of any exceptions thrown by subscribers.
@@ -356,6 +420,22 @@ public class Bus {
      * @throws NullPointerException if the event is null.
      */
     public void post(String tag, Object event) {
+        post(tag, event, 0);
+    }
+
+    /**
+     * Posts an event to all registered subscribers.  This method will return successfully after the event has been posted to
+     * all subscribers, and regardless of any exceptions thrown by subscribers.
+     * <p/>
+     * <p>If no subscribers have been subscribed for {@code event}'s class, and {@code event} is not already a
+     * {@link DeadEvent}, it will be wrapped in a DeadEvent and reposted.
+     *
+     * @param tag        event tag to post.
+     * @param event      event to post.
+     * @param stickCount count of subscribers to post "sticky" event to, default to 0.
+     * @throws NullPointerException if the event is null.
+     */
+    public void post(String tag, Object event, int stickCount) {
         if (event == null) {
             throw new NullPointerException("Event to post must not be null.");
         }
@@ -377,6 +457,10 @@ public class Bus {
 
         if (!dispatched && !(event instanceof DeadEvent)) {
             post(new DeadEvent(this, event));
+        }
+
+        if (stickCount > 0) {
+            stickyEvents.offer(new StickyEvent(tag, event, stickCount));
         }
     }
 
