@@ -19,34 +19,35 @@ Also RxBus provide the event tag to define the event. The method's first (and on
 Usage
 --------
 
-Just 2 Steps:
-
+Just 3 Steps:
 **STEP 1**
+
+Add the JitPack maven repository to the list of repositories:
+```groovy
+allprojects {
+    repositories {
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
+}
+```
+
+**STEP 2**
 
 Add dependency to your gradle file:
 ```groovy
-compile 'com.hwangjr.rxbus:rxbus:1.0.5'
-```
-Or maven:
-``` xml
-<dependency>
-  <groupId>com.hwangjr.rxbus</groupId>
-  <artifactId>rxbus</artifactId>
-  <version>1.0.5</version>
-  <type>aar</type>
-</dependency>
+compile 'com.github.CrazyOrr.rxbus:rxbus:master-SNAPSHOT'
 ```
 
 **TIP:** Maybe you also use the [JakeWharton/timber](https://github.com/JakeWharton/timber) to log your message, you may need to exclude the timber (from version 1.0.4, timber dependency update from [AndroidKnife/Utils/timber](https://github.com/AndroidKnife/Utils/tree/master/timber) to JakeWharton):
 ``` groovy
-compile ('com.hwangjr.rxbus:rxbus:1.0.5') {
+compile ('com.github.CrazyOrr.rxbus:rxbus:master-SNAPSHOT') {
     exclude group: 'com.jakewharton.timber', module: 'timber'
 }
 ```
-en
 Snapshots of the development version are available in [Sonatype's `snapshots` repository](https://oss.sonatype.org/content/repositories/snapshots/).
 
-**STEP 2**
+**STEP 3**
 
 Just use the provided(Any Thread Enforce):
 ``` java
