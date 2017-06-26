@@ -383,6 +383,13 @@ public class Bus {
         }
     }
 
+    /**
+     * Unregisters all producer and subscriber methods on all registered objects associated with a context.
+     *
+     * @param context all registered objects associated with this context will be unregistered
+     * @throws IllegalArgumentException if the object was not previously registered.
+     * @throws NullPointerException     if the object is null.
+     */
     public void unregisterByContext(Context context) {
         String contextStr = context.toString();
         Set<Object> registers = contextStrToRegistersSet.get(contextStr);
