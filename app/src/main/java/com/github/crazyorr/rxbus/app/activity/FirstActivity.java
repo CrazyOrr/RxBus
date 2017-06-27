@@ -7,9 +7,9 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.github.crazyorr.rxbus.app.Consts;
+import com.github.crazyorr.rxbus.app.MyRxBus;
 import com.github.crazyorr.rxbus.app.fragment.ReceiverFragment;
 import com.github.crazyorr.rxbus.app.fragment.SenderFragment;
-import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.hwangjr.rxbus.app.R;
@@ -58,13 +58,13 @@ public class FirstActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        RxBus.get().register(this);
+        MyRxBus.get().register(this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        RxBus.get().unregister(this);
+        MyRxBus.get().unregister(this);
     }
 
     @Subscribe(

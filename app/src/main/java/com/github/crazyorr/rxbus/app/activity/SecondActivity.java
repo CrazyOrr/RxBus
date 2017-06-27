@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.github.crazyorr.rxbus.app.Consts;
-import com.hwangjr.rxbus.RxBus;
+import com.github.crazyorr.rxbus.app.MyRxBus;
 import com.hwangjr.rxbus.app.R;
 
 public class SecondActivity extends AppCompatActivity {
@@ -22,7 +22,7 @@ public class SecondActivity extends AppCompatActivity {
             public void onClick(View v) {
                 switch (v.getId()) {
                     case R.id.btn_send:
-                        RxBus.get().post(Consts.TAG_HELLO, etSent.getText().toString(),
+                        MyRxBus.get().post(Consts.TAG_HELLO, etSent.getText().toString(),
                                 Integer.parseInt(etCount.getText().toString()));
                         break;
                     case R.id.btn_go_back:

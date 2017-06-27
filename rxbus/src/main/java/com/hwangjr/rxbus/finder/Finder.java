@@ -1,8 +1,8 @@
 package com.hwangjr.rxbus.finder;
 
 import com.hwangjr.rxbus.entity.EventType;
-import com.hwangjr.rxbus.entity.SubscriberEvent;
 import com.hwangjr.rxbus.entity.ProducerEvent;
+import com.hwangjr.rxbus.entity.SubscriberEvent;
 
 import java.util.Map;
 import java.util.Set;
@@ -11,11 +11,6 @@ import java.util.Set;
  * Finds producer and subscriber methods.
  */
 public interface Finder {
-
-    Map<EventType, ProducerEvent> findAllProducers(Object listener);
-
-    Map<EventType, Set<SubscriberEvent>> findAllSubscribers(Object listener);
-
 
     Finder ANNOTATED = new Finder() {
         @Override
@@ -28,4 +23,19 @@ public interface Finder {
             return AnnotatedFinder.findAllSubscribers(listener);
         }
     };
+    Finder ANNOTATED_HIERARCHY = new Finder() {
+        @Override
+        public Map<EventType, ProducerEvent> findAllProducers(Object listener) {
+            return AnnotatedFinder.findAllProducers(listener, true);
+        }
+
+        @Override
+        public Map<EventType, Set<SubscriberEvent>> findAllSubscribers(Object listener) {
+            return AnnotatedFinder.findAllSubscribers(listener, true);
+        }
+    };
+
+    Map<EventType, ProducerEvent> findAllProducers(Object listener);
+
+    Map<EventType, Set<SubscriberEvent>> findAllSubscribers(Object listener);
 }

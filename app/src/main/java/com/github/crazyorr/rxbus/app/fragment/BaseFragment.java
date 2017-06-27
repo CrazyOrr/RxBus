@@ -1,8 +1,13 @@
 package com.github.crazyorr.rxbus.app.fragment;
 
 import android.support.v4.app.Fragment;
+import android.util.Log;
 
-import com.hwangjr.rxbus.RxBus;
+import com.github.crazyorr.rxbus.app.Consts;
+import com.github.crazyorr.rxbus.app.MyRxBus;
+import com.hwangjr.rxbus.annotation.Subscribe;
+import com.hwangjr.rxbus.annotation.Tag;
+import com.hwangjr.rxbus.thread.EventThread;
 
 public class BaseFragment extends Fragment {
     protected final String TAG = this.getClass().getSimpleName();
@@ -11,7 +16,7 @@ public class BaseFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        RxBus.get().register(this);
+        MyRxBus.get().register(this);
         if (runnable != null) {
             runnable.run();
             runnable = null;
@@ -21,10 +26,18 @@ public class BaseFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        RxBus.get().unregister(this);
+        MyRxBus.get().unregister(this);
     }
 
     protected void runAfterOnResume(Runnable runnable) {
         this.runnable = runnable;
+    }
+
+    @Subscribe(
+            thread = EventThread.IMMEDIATE,
+            tags = {@Tag(Consts.TAG_HELLO)}
+    )
+    public void receive(String msg) {
+        Log.i(TAG, "BaseFragment received: " + msg);
     }
 }

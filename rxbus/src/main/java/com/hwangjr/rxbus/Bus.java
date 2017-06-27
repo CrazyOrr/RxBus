@@ -13,9 +13,6 @@ import com.hwangjr.rxbus.finder.Finder;
 import com.hwangjr.rxbus.thread.ThreadEnforcer;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +21,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import rx.functions.Action1;
+
+import static com.hwangjr.rxbus.ClassUtils.flattenHierarchy;
 
 
 /**
@@ -105,9 +104,6 @@ public class Bus {
      * Used to find subscriber methods in register and unregister.
      */
     private final Finder finder;
-
-    private final ConcurrentMap<Class<?>, Set<Class<?>>> flattenHierarchyCache =
-            new ConcurrentHashMap<>();
 
     /**
      * All registered objects, mapped by context's string.
@@ -506,41 +502,28 @@ public class Bus {
         return subscribersByType.get(type);
     }
 
-    /**
-     * Flattens a class's type hierarchy into a set of Class objects.  The set will include all superclasses
-     * (transitively), and all interfaces implemented by these superclasses.
-     *
-     * @param concreteClass class whose type hierarchy will be retrieved.
-     * @return {@code concreteClass}'s complete type hierarchy, flattened and uniqued.
-     */
-    Set<Class<?>> flattenHierarchy(Class<?> concreteClass) {
-        Set<Class<?>> classes = flattenHierarchyCache.get(concreteClass);
-        if (classes == null) {
-            Set<Class<?>> classesCreation = getClassesFor(concreteClass);
-            classes = flattenHierarchyCache.putIfAbsent(concreteClass, classesCreation);
-            if (classes == null) {
-                classes = classesCreation;
-            }
+    public static class Builder {
+        private ThreadEnforcer enforcer = ThreadEnforcer.MAIN;
+        private String identifier = DEFAULT_IDENTIFIER;
+        private Finder finder = Finder.ANNOTATED;
+
+        public Builder threadEnforcer(ThreadEnforcer enforcer) {
+            this.enforcer = enforcer;
+            return this;
         }
 
-        return classes;
-    }
-
-    private Set<Class<?>> getClassesFor(Class<?> concreteClass) {
-        List<Class<?>> parents = new LinkedList<>();
-        Set<Class<?>> classes = new HashSet<>();
-
-        parents.add(concreteClass);
-
-        while (!parents.isEmpty()) {
-            Class<?> clazz = parents.remove(0);
-            classes.add(clazz);
-
-            Class<?> parent = clazz.getSuperclass();
-            if (parent != null) {
-                parents.add(parent);
-            }
+        public Builder identifier(String identifier) {
+            this.identifier = identifier;
+            return this;
         }
-        return classes;
+
+        public Builder finder(Finder finder) {
+            this.finder = finder;
+            return this;
+        }
+
+        public Bus build() {
+            return new Bus(enforcer, identifier, finder);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.hwangjr.rxbus.finder;
 
+import com.hwangjr.rxbus.ClassUtils;
 import com.hwangjr.rxbus.annotation.Produce;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
@@ -33,6 +34,10 @@ public final class AnnotatedFinder {
      */
     private static final ConcurrentMap<Class<?>, Map<EventType, Set<SourceMethod>>> SUBSCRIBERS_CACHE =
             new ConcurrentHashMap<>();
+
+    private AnnotatedFinder() {
+        // No instances.
+    }
 
     private static void loadAnnotatedProducerMethods(Class<?> listenerClass,
                                                      Map<EventType, SourceMethod> producerMethods) {
@@ -148,18 +153,34 @@ public final class AnnotatedFinder {
      * This implementation finds all methods marked with a {@link Produce} annotation.
      */
     static Map<EventType, ProducerEvent> findAllProducers(Object listener) {
-        final Class<?> listenerClass = listener.getClass();
-        Map<EventType, ProducerEvent> producersInMethod = new HashMap<>();
+        return findAllProducers(listener, false);
+    }
 
-        Map<EventType, SourceMethod> methods = PRODUCERS_CACHE.get(listenerClass);
-        if (null == methods) {
-            methods = new HashMap<>();
-            loadAnnotatedProducerMethods(listenerClass, methods);
+    /**
+     * This implementation finds all methods marked with a {@link Produce} annotation.
+     */
+    static Map<EventType, ProducerEvent> findAllProducers(Object listener, boolean hierarchical) {
+        final Class<?> listenerClass = listener.getClass();
+        Set<Class<?>> listenerClassSet;
+        if (hierarchical) {
+            listenerClassSet = ClassUtils.flattenHierarchy(listenerClass);
+        } else {
+            listenerClassSet = new HashSet<>();
+            listenerClassSet.add(listenerClass);
         }
-        if (!methods.isEmpty()) {
-            for (Map.Entry<EventType, SourceMethod> e : methods.entrySet()) {
-                ProducerEvent producer = new ProducerEvent(listener, e.getValue().method, e.getValue().thread);
-                producersInMethod.put(e.getKey(), producer);
+
+        Map<EventType, ProducerEvent> producersInMethod = new HashMap<>();
+        for (Class<?> clazz : listenerClassSet) {
+            Map<EventType, SourceMethod> methods = PRODUCERS_CACHE.get(clazz);
+            if (null == methods) {
+                methods = new HashMap<>();
+                loadAnnotatedProducerMethods(clazz, methods);
+            }
+            if (!methods.isEmpty()) {
+                for (Map.Entry<EventType, SourceMethod> e : methods.entrySet()) {
+                    ProducerEvent producer = new ProducerEvent(listener, e.getValue().method, e.getValue().thread);
+                    producersInMethod.put(e.getKey(), producer);
+                }
             }
         }
 
@@ -170,29 +191,42 @@ public final class AnnotatedFinder {
      * This implementation finds all methods marked with a {@link Subscribe} annotation.
      */
     static Map<EventType, Set<SubscriberEvent>> findAllSubscribers(Object listener) {
+        return findAllSubscribers(listener, false);
+    }
+
+    /**
+     * This implementation finds all methods marked with a {@link Subscribe} annotation.
+     */
+    static Map<EventType, Set<SubscriberEvent>> findAllSubscribers(Object listener, boolean hierarchical) {
         Class<?> listenerClass = listener.getClass();
+        Set<Class<?>> listenerClassSet;
+        if (hierarchical) {
+            listenerClassSet = ClassUtils.flattenHierarchy(listenerClass);
+        } else {
+            listenerClassSet = new HashSet<>();
+            listenerClassSet.add(listenerClass);
+        }
+
         Map<EventType, Set<SubscriberEvent>> subscribersInMethod = new HashMap<>();
 
-        Map<EventType, Set<SourceMethod>> methods = SUBSCRIBERS_CACHE.get(listenerClass);
-        if (null == methods) {
-            methods = new HashMap<>();
-            loadAnnotatedSubscriberMethods(listenerClass, methods);
-        }
-        if (!methods.isEmpty()) {
-            for (Map.Entry<EventType, Set<SourceMethod>> e : methods.entrySet()) {
-                Set<SubscriberEvent> subscribers = new HashSet<>();
-                for (SourceMethod m : e.getValue()) {
-                    subscribers.add(new SubscriberEvent(listener, m.method, m.thread));
+        for (Class<?> clazz : listenerClassSet) {
+            Map<EventType, Set<SourceMethod>> methods = SUBSCRIBERS_CACHE.get(clazz);
+            if (null == methods) {
+                methods = new HashMap<>();
+                loadAnnotatedSubscriberMethods(clazz, methods);
+            }
+            if (!methods.isEmpty()) {
+                for (Map.Entry<EventType, Set<SourceMethod>> e : methods.entrySet()) {
+                    Set<SubscriberEvent> subscribers = new HashSet<>();
+                    for (SourceMethod m : e.getValue()) {
+                        subscribers.add(new SubscriberEvent(listener, m.method, m.thread));
+                    }
+                    subscribersInMethod.put(e.getKey(), subscribers);
                 }
-                subscribersInMethod.put(e.getKey(), subscribers);
             }
         }
 
         return subscribersInMethod;
-    }
-
-    private AnnotatedFinder() {
-        // No instances.
     }
 
     private static class SourceMethod {

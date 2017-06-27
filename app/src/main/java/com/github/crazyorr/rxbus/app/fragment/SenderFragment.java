@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.github.crazyorr.rxbus.app.Consts;
-import com.hwangjr.rxbus.RxBus;
+import com.github.crazyorr.rxbus.app.MyRxBus;
 import com.hwangjr.rxbus.app.R;
 
 public class SenderFragment extends BaseFragment {
@@ -22,7 +22,7 @@ public class SenderFragment extends BaseFragment {
         view.findViewById(R.id.btn_send).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RxBus.get().post(Consts.TAG_HELLO, etSent.getText().toString(),
+                MyRxBus.get().post(Consts.TAG_HELLO, etSent.getText().toString(),
                         Integer.parseInt(etCount.getText().toString()));
             }
         });
