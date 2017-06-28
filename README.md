@@ -20,6 +20,7 @@ Usage
 --------
 
 Just 3 Steps:
+
 **STEP 1**
 
 Add the JitPack maven repository to the list of repositories:
