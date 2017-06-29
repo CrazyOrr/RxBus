@@ -9,7 +9,7 @@ import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.hwangjr.rxbus.thread.EventThread;
 
-public class BaseFragment extends Fragment {
+public abstract class BaseFragment extends Fragment {
     protected final String TAG = this.getClass().getSimpleName();
     private Runnable runnable;
 
@@ -37,7 +37,7 @@ public class BaseFragment extends Fragment {
             thread = EventThread.IMMEDIATE,
             tags = {@Tag(Consts.TAG_HELLO)}
     )
-    public void receive(String msg) {
-        Log.i(TAG, "BaseFragment received: " + msg);
+    public void baseReceive(String msg) {
+        Log.e(TAG, "BaseFragment received: " + msg);
     }
 }

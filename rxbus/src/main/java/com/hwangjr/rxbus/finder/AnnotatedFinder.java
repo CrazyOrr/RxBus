@@ -221,7 +221,12 @@ public final class AnnotatedFinder {
                     for (SourceMethod m : e.getValue()) {
                         subscribers.add(new SubscriberEvent(listener, m.method, m.thread));
                     }
-                    subscribersInMethod.put(e.getKey(), subscribers);
+                    Set<SubscriberEvent> existingSubscribers = subscribersInMethod.get(e.getKey());
+                    if (existingSubscribers == null) {
+                        subscribersInMethod.put(e.getKey(), subscribers);
+                    } else {
+                        existingSubscribers.addAll(subscribers);
+                    }
                 }
             }
         }
