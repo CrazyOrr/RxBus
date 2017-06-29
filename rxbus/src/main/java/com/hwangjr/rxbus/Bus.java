@@ -292,7 +292,7 @@ public class Bus {
     /**
      * Whether all the subscriber methods on {@code object} to receive events and producer methods to provide events has registered.
      * <p/>
-     * If any subscribers and producers has registered, it will return true, alse false.
+     * If any subscribers and producers has registered, it will return true, else false.
      *
      * @param object object whose subscriber methods should be registered.
      * @throws NullPointerException if the object is null.
